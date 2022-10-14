@@ -1,73 +1,90 @@
 #include "sort.h"
 
 /**
- * quick_sort - function that sorts an array of integers
- *              in ascending order using the Quick sort algorithm
- * @array: array
- * @size: array's size
- * Return: void
+ * swap - swap nodes
+ * @lhs: a pointer to the node before rhs
+ * @rhs: a pointer to the node after lhs
  */
-void quick_sort(int *array, size_t size)
+void swap(listint_t *lhs, listint_t *rhs)
 {
-	if (array == NULL || size < 2)
-		return;
-
-	quick_s(array, 0, size - 1, size);
+	if (rhs->next)
+		rhs->next->prev = lhs;
+	if (lhs->prev)
+		lhs->prev->next = rhs;
+	lhs->next = rhs->next;
+	rhs->next = lhs;
+	rhs->prev = lhs->prev;
+	lhs->prev = rhs;
 }
 
 /**
- * partition - partition
- * @array: array
- * @lo: lower
- * @hi: higher
- * @size: array's size
- * Return: i
+ * cocktail_forward - do a forward pass
+ * @list: a double pointer to the head of the list
+ * @head: the starting point
  */
-int partition(int *array, int lo, int hi, size_t size)
+void cocktail_forward(listint_t **list, listint_t *head)
 {
-	int i = lo - 1, j = lo;
-	int pivot = array[hi], aux = 0;
+	static listint_t *stop;
+	static listint_t *curr;
+	static int flag;
 
-	for (; j < hi; j++)
+	flag = 0;
+	while (head != stop && (curr = head, head = head->next))
 	{
-		if (array[j] < pivot)
+		if (curr->n > head->n)
 		{
-			i++;
-			if (array[i] != array[j])
-			{
-				aux = array[i];
-				array[i] = array[j];
-				array[j] = aux;
-				print_array(array, size);
-			}
+			flag = 1;
+			swap(curr, head);
+			if (!head->prev)
+				*list = head;
+			print_list(*list);
+			head = curr;
 		}
 	}
-	if (array[i + 1] != array[hi])
+	if (flag)
 	{
-		aux = array[i + 1];
-		array[i + 1] = array[hi];
-		array[hi] = aux;
-		print_array(array, size);
+		stop = curr;
+		cocktail_backward(list, curr);
 	}
-	return (i + 1);
 }
 
 /**
- * quick_s - quick sort
- * @array: given array
- * @lo: lower
- * @hi:higher
- * @size: array's size
- * Return: void
+ * cocktail_backward - do a backward pass
+ * @list: a double pointer to the head of the list
+ * @tail: the starting point
  */
-void quick_s(int *array, int lo, int hi, size_t size)
+void cocktail_backward(listint_t **list, listint_t *tail)
 {
-	int pivot;
+	static listint_t *stop;
+	static listint_t *curr;
+	static int flag;
 
-	if (lo < hi)
+	flag = 0;
+	while (tail != stop && (curr = tail, tail = tail->prev))
 	{
-		pivot = partition(array, lo, hi, size);
-		quick_s(array, lo, pivot - 1, size);
-		quick_s(array, pivot + 1, hi, size);
+		if (tail->n > curr->n)
+		{
+			flag = 1;
+			swap(tail, curr);
+			if (!curr->prev)
+				*list = curr;
+			print_list(*list);
+			tail = curr;
+		}
 	}
+	if (flag)
+	{
+		stop = curr;
+		cocktail_forward(list, curr);
+	}
+}
+
+/**
+ * cocktail_sort_list - Perform the cocktail sort algorithm
+ * @list: a double pointer to the head of a list
+ */
+void cocktail_sort_list(listint_t **list)
+{
+	if (list && *list)
+		cocktail_forward(list, *list);
 }
